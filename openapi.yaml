@@ -1,0 +1,115 @@
+openapi: "3.0.1"
+info:
+  description: "The tranmere web results search stack"
+  version: "1.0"
+  title: "ResultsSearch"
+paths:
+  /:
+    get:
+      parameters:
+      - name: season
+        in: query
+        description: The season to search from - leave empty for top players in alltime stats
+        schema:
+          type: integer
+          format: int64
+      - name: competition
+        in: query
+        description: The competition to search for
+        schema:
+          type: string
+      - name: opposition
+        in: query
+        description: The opposition team for results
+        schema:
+          type: string
+      - name: sort
+        in: query
+        description: Sort order of players
+        schema:
+          type: string
+          default: starts
+          enum:
+          - goals
+          - starts    
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Results'
+      security:
+      - APIKeyHeader: []
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        type: aws_proxy
+        responses:
+          default:
+            statusCode: "200"
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TranmereWebResultsSearch.Arn}/invocations
+
+
+x-amazon-apigateway-cors:
+  allowOrigins:
+    - '*'
+  allowMethods:
+    - GET
+    - OPTIONS
+    - POST
+  allowHeaders:
+    - x-amzm-header
+    - x-apigateway-header
+    - x-api-key
+    - authorization
+    - x-amz-date
+    - content-type
+    
+x-amazon-apigateway-gateway-responses:
+  ACCESS_DENIED:
+    statusCode: 403
+    responseParameters:
+      gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+  UNAUTHORIZED:
+    statusCode: 401
+    responseParameters:
+      gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+  DEFAULT_5XX:
+    statusCode: 500
+    responseParameters:
+      gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+  MISSING_AUTHENTICATION_TOKEN:
+    statusCode: 403
+    responseParameters:
+      gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+  INVALID_API_KEY:
+    statusCode: 200
+    responseParameters:
+      gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+      gatewayresponse.header.Access-Control-Allow-Headers: "'x-api-key,content-type'"
+  RESOURCE_NOT_FOUND:
+    statusCode: 404
+    responseParameters:
+      gatewayresponse.header.Access-Control-Allow-Origin: "'*'" 
+
+components:
+  schemas:
+    Results:
+      type: array
+      items:
+        $ref: '#/components/schemas/Result'
+    Result:
+      type: object
+      properties:
+        season:
+          type: string
+        ft:
+          type: string
+        opposition:
+          type: string
+  securitySchemes:
+    APIKeyHeader:
+      type: apiKey
+      name: x-api-Key
+      in: header         
