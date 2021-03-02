@@ -3,7 +3,7 @@ const AWS = require('aws-sdk');
 let dynamo = new AWS.DynamoDB.DocumentClient();
 AWSXRay.captureAWSClient(dynamo.service);
 
-exports.entityHandler = async function(event, context){
+exports.handler = async function(event, context){
 
     var season = event.queryStringParameters ? event.queryStringParameters.season : null;
     var competition = event.queryStringParameters ? event.queryStringParameters.competition : null;
