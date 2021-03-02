@@ -55,7 +55,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src
-      Handler: TranmereWebResultsSearch.handler
+      Handler: search.handler
       Runtime: nodejs12.x
       DeploymentPreference:
         Type: !Ref Deployment
