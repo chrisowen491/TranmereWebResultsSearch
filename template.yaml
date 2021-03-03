@@ -67,9 +67,9 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: TranmereWebGames
         - DynamoDBCrudPolicy:
-            TableName: TranmereWebGoals
+            TableName: TranmereWebGoalsTable
         - DynamoDBCrudPolicy:
-            TableName: TranmereWebApps      
+            TableName: TranmereWebAppsTable      
       Environment:
         Variables:
           EnvironmentName: !Ref EnvName
