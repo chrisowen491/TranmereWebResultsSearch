@@ -11,16 +11,17 @@
   "vertical": "Insurance",
   "author": "Chris Owen",
   "dependencies": {
-    "aws-xray-sdk": "^3.2.0"
+    "datadog-lambda-js": "^3.59.0",
+    "dd-trace": "^1.1.1"
   },
   "devDependencies": {
-    "eslint": "^6.6.0",
-    "marked": ">=2.0.0",
-    "nyc": "^15.1.0",
     "aws-sdk": "^2.815.0",
     "chai": "^4.2.0",
+    "eslint": "^6.6.0",
+    "marked": ">=2.0.0",
     "mocha": "^8.2.1",
     "newman": "^5.2.2",
+    "nyc": "^15.1.0",
     "yargs": "^16.2.0"
   },
   "eslintConfig": {

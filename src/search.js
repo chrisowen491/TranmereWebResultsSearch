@@ -1,7 +1,5 @@
-const AWSXRay = require('aws-xray-sdk');
 const AWS = require('aws-sdk');
 let dynamo = new AWS.DynamoDB.DocumentClient();
-AWSXRay.captureAWSClient(dynamo.service);
 
 exports.handler = async function(event, context){
 
@@ -28,21 +26,21 @@ exports.handler = async function(event, context){
         if(match.programme && match.programme != "#N/A") {
 
              var smallBody = {
-                  "bucket": 'trfc-programmes',
-                  "key": match.programme,
-                  "edits": {
-                    "resize": {
-                      "width": 100,
-                      "fit": "contain"
-                    }
-                  }
-                };
-                 var largeBody = {
-                      "bucket": 'trfc-programmes',
-                      "key": match.programme,
-                    };
-             match.programme = Buffer.from(JSON.stringify(smallBody)).toString('base64');
-             match.largeProgramme = Buffer.from(JSON.stringify(largeBody)).toString('base64');
+              "bucket": 'trfc-programmes',
+              "key": match.programme,
+              "edits": {
+                "resize": {
+                  "width": 100,
+                  "fit": "contain"
+                }
+              }
+            };
+            var largeBody = {
+                "bucket": 'trfc-programmes',
+                "key": match.programme,
+            };
+            match.programme = Buffer.from(JSON.stringify(smallBody)).toString('base64');
+            match.largeProgramme = Buffer.from(JSON.stringify(largeBody)).toString('base64');
         } else {
             delete match.programme;
         }
@@ -81,12 +79,10 @@ async function getResults(season, competition, opposition, date, manager, venue,
 
     var query = false;
     var params = {
-         TableName : "TranmereWebGames"
+        TableName : "TranmereWebGames",
+        ExpressionAttributeValues: {},
+        ExpressionAttributeNames: {}
     };
-
-    if(season || competition || opposition || venue || pens || date || manager) {
-        params.ExpressionAttributeValues = {};
-    }
 
     if(season) {
         params.KeyConditionExpression =  "season = :season",
@@ -109,24 +105,29 @@ async function getResults(season, competition, opposition, date, manager, venue,
         query = true;
     } else if(sort && (decodeURIComponent(sort) == "Top Attendance")) {
         params.IndexName = "AttendanceIndex";
-        params.ExpressionAttributeNames = {};
-        params.ExpressionAttributeValues = {};
         params.KeyConditionExpression =  "#static = :static",
-        params.ExpressionAttributeValues[":static"] = "static";
-        params.ExpressionAttributeNames["#static"] = "static";
+        params.ExpressionAttributeNames = {
+            "#static": "static"
+        };
+        params.ExpressionAttributeValues = {
+            ":static": "static",
+        };
         params.ScanIndexForward = false;
         params.Limit = 20;
         query = true;
     }
-
+    
+    if(sort && (decodeURIComponent(sort) == "Top Attendance")) {
+        params.Limit = 60;    
+    }
+    
     if(manager) {
         var dates = manager.split(',');
-        if(query) {
+        if(query && !params.ExpressionAttributeValues[":static"]) {
             params.KeyConditionExpression =  params.KeyConditionExpression + " and #date BETWEEN :from and :to";
         } else {
             params.FilterExpression = "#date BETWEEN :from and :to";
         }
-        params.ExpressionAttributeNames = {};
         params.ExpressionAttributeNames["#date"] = "date";
         params.ExpressionAttributeValues[":from"] = decodeURIComponent(dates[0]);
         params.ExpressionAttributeValues[":to"] = decodeURIComponent(dates[1]);
@@ -138,30 +139,26 @@ async function getResults(season, competition, opposition, date, manager, venue,
         } else {
             params.FilterExpression = params.FilterExpression ? params.FilterExpression + " and #date = :date" : "#date = :date";
         }
-        params.ExpressionAttributeNames = {};
         params.ExpressionAttributeNames["#date"] = "date";
         params.ExpressionAttributeValues[":date"] = decodeURIComponent(date);
     }
 
-    if(season && opposition) {
-        params.FilterExpression = params.FilterExpression ? params.FilterExpression + " and opposition = :opposition" : "opposition = :opposition";
-        params.ExpressionAttributeValues[":opposition"] = decodeURIComponent(opposition);
-    }
+    if(season && opposition)
+        params = buildQuery(season, params, opposition, "opposition");
+    
+    if(competition && (season || opposition)) 
+        params = buildQuery(season, params, competition, "competition");  
 
-    if(season && competition || (!season && opposition && competition)) {
-        params.FilterExpression = params.FilterExpression ? params.FilterExpression + " and competition = :competition" : "competition = :competition";
-        params.ExpressionAttributeValues[":competition"] = decodeURIComponent(competition);
-    }
-
-    if(season && venue || (competition && venue) || (opposition && venue)) {
-        params.FilterExpression = params.FilterExpression ? params.FilterExpression + " and venue = :venue" : "venue = :venue";
-        params.ExpressionAttributeValues[":venue"] = decodeURIComponent(venue);
-    }
+    if(venue && (season || competition || opposition))
+        params = buildQuery(season, params, venue, "venue"); 
 
     if(pens) {
         params.FilterExpression = params.FilterExpression ? params.FilterExpression + " and pens <> :pens" : "pens <> :pens";
         params.ExpressionAttributeValues[":pens"] = "";
     }
+    
+    if(!Object.keys(params.ExpressionAttributeNames).length)
+        delete params.ExpressionAttributeNames;
 
     if(query) {
         var result = await dynamo.query(params).promise();
@@ -177,6 +174,12 @@ async function getResults(season, competition, opposition, date, manager, venue,
         return items;
     }
 };
+
+function buildQuery(season, query, attribute, attributeName) {
+    query.FilterExpression = query.FilterExpression ? query.FilterExpression + ` and ${attributeName} = :${attributeName}` : `${attributeName} = :${attributeName}`;
+    query.ExpressionAttributeValues[`:${attributeName}`] = decodeURIComponent(attribute);
+    return query;
+}
 
 async function getGoals(date, season) {
 
@@ -194,7 +197,6 @@ async function getGoals(date, season) {
     }
 
     var result = await dynamo.query(params).promise();
-
     return result.Items;
 };
 
@@ -214,7 +216,6 @@ async function getApps(date, season) {
     }
 
     var result = await dynamo.query(params).promise();
-
     return result.Items;
 };
 
