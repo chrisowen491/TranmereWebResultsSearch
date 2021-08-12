@@ -226,7 +226,7 @@ function sendResponse(statusCode, message) {
 		headers: { 
             'Content-Type': 'application/json', 
             'Access-Control-Allow-Origin': '*',
-            "Cache-Control": "Cache-Control: public, max-age=86400"
+            "Cache-Control": "public, max-age=86400"
         },
 	};
 	return response;
