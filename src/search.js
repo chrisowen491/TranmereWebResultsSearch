@@ -223,7 +223,11 @@ function sendResponse(statusCode, message) {
 	const response = {
 		statusCode: statusCode,
 		body: JSON.stringify(message),
-		headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+		headers: { 
+            'Content-Type': 'application/json', 
+            'Access-Control-Allow-Origin': '*',
+            "Cache-Control": "Cache-Control: public, max-age=86400"
+        },
 	};
 	return response;
 }
