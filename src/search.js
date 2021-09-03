@@ -160,19 +160,14 @@ async function getResults(season, competition, opposition, date, manager, venue,
     if(!Object.keys(params.ExpressionAttributeNames).length)
         delete params.ExpressionAttributeNames;
 
-    if(query) {
-        var result = await dynamo.query(params).promise();
-        return result.Items;
-    } else {
-        var result = await dynamo.scan(params).promise();
-        var items = result.Items;
-        if (typeof result.LastEvaluatedKey != "undefined") {
-            params.ExclusiveStartKey = result.LastEvaluatedKey;
-            var nextResults = await dynamo.scan(params).promise();
-            items = items.concat(nextResults.Items);
-        }
-        return items;
+    var result = query ? await dynamo.query(params).promise() : await dynamo.scan(params).promise();
+    var items = result.Items;
+    if (typeof result.LastEvaluatedKey != "undefined") {
+        params.ExclusiveStartKey = result.LastEvaluatedKey;
+        var nextResults =  query ? await dynamo.query(params).promise() : await dynamo.scan(params).promise();
+        items = items.concat(nextResults.Items);
     }
+    return items;
 };
 
 function buildQuery(query, attribute, attributeName) {
