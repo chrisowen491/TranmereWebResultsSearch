@@ -98,7 +98,7 @@ async function getResults(season, competition, opposition, date, manager, venue,
         params.KeyConditionExpression =  "competition = :competition",
         params.ExpressionAttributeValues[":competition"] = decodeURIComponent(competition);
         query = true;
-    } else if(venue) {
+    } else if(venue && (decodeURIComponent(sort) != "Top Attendance")) {
         params.IndexName = "VenueIndex";
         params.KeyConditionExpression =  "venue = :venue",
         params.ExpressionAttributeValues[":venue"] = decodeURIComponent(venue);
@@ -144,13 +144,13 @@ async function getResults(season, competition, opposition, date, manager, venue,
     }
 
     if(season && opposition)
-        params = buildQuery(season, params, opposition, "opposition");
+        params = buildQuery(params, opposition, "opposition");
     
     if(competition && (season || opposition)) 
-        params = buildQuery(season, params, competition, "competition");  
+        params = buildQuery(params, competition, "competition");  
 
-    if(venue && (season || competition || opposition))
-        params = buildQuery(season, params, venue, "venue"); 
+    if(venue && (season || competition || opposition || sort))
+        params = buildQuery(params, venue, "venue"); 
 
     if(pens) {
         params.FilterExpression = params.FilterExpression ? params.FilterExpression + " and pens <> :pens" : "pens <> :pens";
@@ -175,7 +175,7 @@ async function getResults(season, competition, opposition, date, manager, venue,
     }
 };
 
-function buildQuery(season, query, attribute, attributeName) {
+function buildQuery(query, attribute, attributeName) {
     query.FilterExpression = query.FilterExpression ? query.FilterExpression + ` and ${attributeName} = :${attributeName}` : `${attributeName} = :${attributeName}`;
     query.ExpressionAttributeValues[`:${attributeName}`] = decodeURIComponent(attribute);
     return query;
