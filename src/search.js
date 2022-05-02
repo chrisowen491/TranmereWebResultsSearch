@@ -149,7 +149,7 @@ async function getResults(season, competition, opposition, date, manager, venue,
     if(competition && (season || opposition)) 
         params = buildQuery(params, competition, "competition");  
 
-    if(venue && (season || competition || opposition || sort))
+    if(venue && (season || competition || opposition))
         params = buildQuery(params, venue, "venue"); 
 
     if(pens) {
