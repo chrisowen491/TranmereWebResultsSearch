@@ -5,6 +5,7 @@ Transform:
     Parameters:
       stackName: !Ref "AWS::StackName"
       addLayers: true
+      forwarderArn: !Ref DDFORWARDERARN
       env: !Ref EnvName
       nodeLayerVersion: 78
       service: !Ref Service
@@ -29,7 +30,9 @@ Parameters:
   Version:
     Type: String
   Service:
-    Type: String  
+    Type: String 
+  DDFORWARDERARN:
+    Type: String        
   EnvName:
     Type: String
     Default: sit1
