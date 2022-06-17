@@ -11,8 +11,9 @@ exports.handler = async function(event, context){
     var venue = event.queryStringParameters ? event.queryStringParameters.venue : null;
     var pens = event.queryStringParameters ? event.queryStringParameters.pens : null;
     var sort = event.queryStringParameters ? event.queryStringParameters.sort : null;
+    var or = event.queryStringParameters ? event.queryStringParameters.or : null;
 
-    var data = await getResults(season, competition, opposition, date, manager, venue, pens, sort);
+    var data = await getResults(season, competition, opposition, date, manager, venue, pens, sort, or);
     var results = [];
     for(var i=0; i < data.length; i++) {
         var match = data[i];
@@ -44,7 +45,7 @@ exports.handler = async function(event, context){
         } else {
             delete match.programme;
         }
-        if(date) {
+        if(date && !or) {
             match.goals = await getGoals(date, match.season);
             match.apps = await getApps(date, match.season);
         }
@@ -75,7 +76,7 @@ exports.handler = async function(event, context){
 
 }
 
-async function getResults(season, competition, opposition, date, manager, venue, pens, sort) {
+async function getResults(season, competition, opposition, date, manager, venue, pens, sort, or) {
 
     var query = false;
     var params = {
@@ -133,7 +134,20 @@ async function getResults(season, competition, opposition, date, manager, venue,
         params.ExpressionAttributeValues[":to"] = decodeURIComponent(dates[1]);
     }
 
-    if(date) {
+    if(or) {
+        var modifier = ">"
+        if(or == "previous") {
+            modifier = "<"
+            params.ScanIndexForward = false;
+        }
+        params.KeyConditionExpression =  `season = :season and #date ${modifier} :date`,
+        params.ExpressionAttributeValues[":season"] = decodeURIComponent(season);
+        params.ExpressionAttributeNames["#date"] = "date";
+        params.ExpressionAttributeValues[":date"] = decodeURIComponent(date);
+        params.Limit = 5;
+
+    }
+    else if(date) {
         if(query) {
             params.KeyConditionExpression =  params.KeyConditionExpression + " and #date = :date";
         } else {
