@@ -176,7 +176,7 @@ async function getResults(season, competition, opposition, date, manager, venue,
 
     var result = query ? await dynamo.query(params).promise() : await dynamo.scan(params).promise();
     var items = result.Items;
-    if (typeof result.LastEvaluatedKey != "undefined") {
+    if (typeof result.LastEvaluatedKey != "undefined" && !or) {
         params.ExclusiveStartKey = result.LastEvaluatedKey;
         var nextResults =  query ? await dynamo.query(params).promise() : await dynamo.scan(params).promise();
         items = items.concat(nextResults.Items);
