@@ -13,6 +13,7 @@ exports.handler = async function(event, context){
     var sort = event.queryStringParameters ? event.queryStringParameters.sort : null;
     var or = event.queryStringParameters ? event.queryStringParameters.or : null;
 
+    
     var data = await getResults(season, competition, opposition, date, manager, venue, pens, sort, or);
     var results = [];
     for(var i=0; i < data.length; i++) {
