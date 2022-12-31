@@ -11,7 +11,7 @@
   "vertical": "Insurance",
   "author": "Chris Owen",
   "devDependencies": {
-    "aws-sdk": "^2.815.0",
+    "aws-sdk": "^2.1286.0",
     "chai": "^4.2.0",
     "eslint": "^6.6.0",
     "marked": ">=2.0.0",
